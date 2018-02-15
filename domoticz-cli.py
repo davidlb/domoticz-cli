@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # magnus@appelquist.name
 
@@ -6,7 +6,7 @@ import requests, json, argparse, sys, time, datetime
 
 import codecs
 UTF8Writer = codecs.getwriter('utf8')
-sys.stdout = UTF8Writer(sys.stdout)
+sys.stdout = UTF8Writer(sys.stdout.detach())
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", help="Host to connect to", default="localhost")
@@ -32,25 +32,25 @@ debug = args.debug
 def _get_request(cmd):
     global debug
     url = "http://"+args.host+":"+str(args.port)+"/json.htm?"+cmd
-    if debug: print url
+    if debug: print(url)
     r = requests.get(url)
     if r.status_code != 200 or r.json()["status"] != "OK":
-        print "Problem talking with domoticz, exit..."
-        print r.status_code
-        print r.text
+        print("Problem talking with domoticz, exit...")
+        print(r.status_code)
+        print(r.text)
         sys.exit(1)
     return r.json()
 
 if args.get_sunrise:
     data = _get_request("type=command&param=getSunRiseSet")
-    print "Sunrise is at "+data["Sunrise"]+" and sunset is at "+data["Sunset"]
+    print("Sunrise is at "+data["Sunrise"]+" and sunset is at "+data["Sunset"])
 
 if args.list_sensors:
     data = _get_request("type=devices&filter=all&used=true&order=Name")
 
     for result in data["result"]:
         if result["Type"] not in ["Lighting 2","Scene", "Group"]:
-            print u"%-30s %-20s     %20s" % (result["Name"], result["Data"], result["LastUpdate"])
+            print(u"%-30s %-20s     %20s" % (result["Name"], result["Data"], result["LastUpdate"]))
 
 if args.list_sensors_graphite:
     data = _get_request("type=devices&filter=all&used=true&order=Name")
@@ -64,20 +64,20 @@ if args.list_sensors_graphite:
         timestamp = int(time.mktime(datetime.datetime.strptime(result["LastUpdate"], "%Y-%m-%d %H:%M:%S").timetuple()))
 
         if result["Type"] == "Temp":
-            print u"%s.temperature %.1f %d" % (graphite_path, result["Temp"], timestamp)
+            print(u"%s.temperature %.1f %d" % (graphite_path, result["Temp"], timestamp))
 
         if result["Type"] == "Temp + Humidity":
-            print u"%s.temperature %.1f %d" % (graphite_path, result["Temp"], timestamp)
-            print u"%s.humidity %.1f %d" % (graphite_path, result["Humidity"], timestamp)
+            print(u"%s.temperature %.1f %d" % (graphite_path, result["Temp"], timestamp))
+            print(u"%s.humidity %.1f %d" % (graphite_path, result["Humidity"], timestamp))
 
         if result["Type"] == "Usage":
-            print u"%s.energy %.1f %d" % (graphite_path, float(result["Data"].split(" ")[0]), timestamp)
+            print(u"%s.energy %.1f %d" % (graphite_path, float(result["Data"].split(" ")[0]), timestamp))
 
         if result["Type"] == "Value":
-            print u"%s.value %d %d" % (graphite_path, int(result["Data"]), timestamp)
+            print(u"%s.value %d %d" % (graphite_path, int(result["Data"]), timestamp))
 
         if result["Type"] == "RFXMeter":
-            print u"%s.counter %d %d" % (graphite_path, int(result["Data"].split(" ")[0].replace(".","")), timestamp)
+            print(u"%s.counter %d %d" % (graphite_path, int(result["Data"].split(" ")[0].replace(".","")), timestamp))
 
 if args.list_sensors_librato and args.librato_user and args.librato_token:
     import librato
@@ -118,11 +118,11 @@ if args.list_sensors_librato and args.librato_user and args.librato_token:
             q.add(u"%s.counter" % librato_path, float(result["Data"].split(" ")[0].replace(".","")), type = "counter")
             nbr_values += 1
 
-    print "Reported %d values to Librato." % nbr_values
+    print("Reported %d values to Librato." % nbr_values)
     q.submit()
 
 if args.list_sensors_librato and (not args.librato_user or not args.librato_token):
-    print "If reporting metrics to Librato you must also provide --librato-user and --librato-token"
+    print("If reporting metrics to Librato you must also provide --librato-user and --librato-token")
     sys.exit(1)
 
 if args.list_switches:
@@ -131,9 +131,9 @@ if args.list_switches:
     for result in data["result"]:
         if result["Type"] == "Lighting 2":
             if debug:
-                print u"%-30s %-20s     %20s idx: %s" % (result["Name"], result["Data"], result["LastUpdate"], str(result["idx"]))
+                print(u"%-30s %-20s     %20s idx: %s" % (result["Name"], result["Data"], result["LastUpdate"], str(result["idx"])))
             else:
-                print u"%-30s %-20s     %20s" % (result["Name"], result["Data"], result["LastUpdate"])
+                print(u"%-30s %-20s     %20s" % (result["Name"], result["Data"], result["LastUpdate"]))
 
 if args.list_scenes or args.list_groups:
     data = _get_request("type=scenes")
@@ -141,9 +141,9 @@ if args.list_scenes or args.list_groups:
     for result in data["result"]:
         if args.list_scenes and result["Type"] == "Scene" or args.list_groups and result["Type"] == "Group":
             if debug:
-                print u"%-30s %-20s     %20s idx: %s" % (result["Name"], result["Status"], result["LastUpdate"], str(result["idx"]))
+                print(u"%-30s %-20s     %20s idx: %s" % (result["Name"], result["Status"], result["LastUpdate"], str(result["idx"])))
             else:
-                print u"%-30s %-20s     %20s" % (result["Name"], result["Status"], result["LastUpdate"])
+                print(u"%-30s %-20s     %20s" % (result["Name"], result["Status"], result["LastUpdate"]))
 
 
 if args.toggle_switch:
@@ -151,7 +151,7 @@ if args.toggle_switch:
     for result in data["result"]:
         if result["Type"] == "Lighting 2":
             if result["Name"] == args.toggle_switch.decode("utf-8"):
-                print "Switch is "+result["Status"]+", toggling..."
+                print("Switch is "+result["Status"]+", toggling...")
                 if result["Status"] == "On":
                     data = _get_request("type=command&param=switchlight&idx=%d&switchcmd=Off" % int(result["idx"]))
                 else:
