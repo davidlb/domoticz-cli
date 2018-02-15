@@ -126,14 +126,13 @@ if args.list_sensors_librato and (not args.librato_user or not args.librato_toke
     sys.exit(1)
 
 if args.list_switches:
-    data = _get_request("type=devices&filter=all&used=true&order=Name")
+    data = _get_request("type=devices&filter=light&used=true&order=Name")
 
     for result in data["result"]:
-        if result["Type"] == "Lighting 2":
-            if debug:
-                print(u"%-30s %-20s     %20s idx: %s" % (result["Name"], result["Data"], result["LastUpdate"], str(result["idx"])))
-            else:
-                print(u"%-30s %-20s     %20s" % (result["Name"], result["Data"], result["LastUpdate"]))
+        if debug:
+            print(u"%-30s %-20s     %20s idx: %s" % (result["Name"], result["Data"], result["LastUpdate"], str(result["idx"])))
+        else:
+            print(u"%-30s %-20s     %20s" % (result["Name"], result["Data"], result["LastUpdate"]))
 
 if args.list_scenes or args.list_groups:
     data = _get_request("type=scenes")
